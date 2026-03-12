@@ -172,6 +172,9 @@ public:
     //! Load the enc_vector from a stream.
     void load(std::istream & in);
 
+    //! Load the enc_vector from a memory-mapped region (zero-copy).
+    void load_mapped(char const *& addr);
+
     template <typename archive_t>
     void CEREAL_SAVE_FUNCTION_NAME(archive_t & ar) const;
 
@@ -400,6 +403,14 @@ void enc_vector<t_coder, t_dens, t_width>::load(std::istream & in)
     read_member(m_size, in);
     m_z.load(in);
     m_sample_vals_and_pointer.load(in);
+}
+
+template <class t_coder, uint32_t t_dens, uint8_t t_width>
+void enc_vector<t_coder, t_dens, t_width>::load_mapped(char const *& addr)
+{
+    read_member(m_size, addr);
+    m_z.load_mapped(addr);
+    m_sample_vals_and_pointer.load_mapped(addr);
 }
 
 template <class t_coder, uint32_t t_dens, uint8_t t_width>

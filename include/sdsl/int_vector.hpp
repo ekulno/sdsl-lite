@@ -678,6 +678,12 @@ public:
     //! Load the int_vector for a stream.
     void load(std::istream & in);
 
+    //! Load the int_vector from a memory-mapped region (zero-copy).
+    /*!\param addr Pointer into the mapped region; advanced past the data on return.
+     *  The caller must ensure the mapped region outlives this int_vector.
+     */
+    void load_mapped(char const *& addr);
+
     /* For cereal we need to define different versions of the load and save function depending on whether we want
      * binary data or text (XML/JSON) data.
      * See https://github.com/USCiLab/cereal/blob/master/include/cereal/types/vector.hpp for an example.
@@ -2019,6 +2025,32 @@ void int_vector<t_width>::load(std::istream & in)
         idx += conf::SDSL_BLOCK_SIZE;
     }
     in.read((char *)p, (bit_data_size() - idx) * sizeof(uint64_t));
+}
+
+template <uint8_t t_width>
+void int_vector<t_width>::load_mapped(char const *& addr)
+{
+    uint64_t width_and_size;
+    std::memcpy(&width_and_size, addr, sizeof(width_and_size));
+    addr += sizeof(width_and_size);
+
+    size_type size = width_and_size & bits::lo_set[56];
+    uint8_t read_int_width = (uint8_t)(width_and_size >> 56);
+    if (t_width == 0)
+    {
+        m_width = read_int_width;
+    }
+
+    // Release any previously owned data.
+    memory_manager::clear(*this);
+
+    m_size = size;
+    m_capacity = 0; // marks data as non-owned (memory-mapped)
+    m_data = const_cast<uint64_t *>(reinterpret_cast<uint64_t const *>(addr));
+
+    // Advance past the data.
+    size_type data_bytes = ((size + 63) >> 6) << 3;
+    addr += data_bytes;
 }
 
 template <uint8_t t_width>

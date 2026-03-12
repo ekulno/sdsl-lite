@@ -275,6 +275,14 @@ public:
         read_member(m_sigma, in);
     }
 
+    void load_mapped(char const *& addr)
+    {
+        m_char2comp.load_mapped(addr);
+        m_comp2char.load_mapped(addr);
+        m_C.load_mapped(addr);
+        read_member(m_sigma, addr);
+    }
+
     //! Equality operator.
     bool operator==(byte_alphabet const & other) const noexcept
     {

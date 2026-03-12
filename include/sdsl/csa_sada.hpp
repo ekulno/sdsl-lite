@@ -285,6 +285,12 @@ public:
      */
     void load(std::istream & in);
 
+    //! Load from a memory-mapped region (zero-copy).
+    /*!\param addr Pointer into the mapped region; advanced past the data on return.
+     *  The caller must ensure the mapped region outlives this csa_sada.
+     */
+    void load_mapped(char const *& addr);
+
     template <typename archive_t>
     void CEREAL_SAVE_FUNCTION_NAME(archive_t & ar) const;
 
@@ -534,6 +540,22 @@ void csa_sada<t_enc_vec, t_dens, t_inv_dens, t_sa_sample_strat, t_isa, t_alphabe
     m_sa_sample.load(in);
     m_isa_sample.load(in, &m_sa_sample);
     m_alphabet.load(in);
+}
+
+template <class t_enc_vec,
+          uint32_t t_dens,
+          uint32_t t_inv_dens,
+          class t_sa_sample_strat,
+          class t_isa,
+          class t_alphabet_strat>
+void csa_sada<t_enc_vec, t_dens, t_inv_dens, t_sa_sample_strat, t_isa, t_alphabet_strat>::load_mapped(
+    char const *& addr)
+{
+    m_psi.load_mapped(addr);
+    m_sa_sample.load_mapped(addr);
+    m_isa_sample.load_mapped(addr);
+    m_isa_sample.set_vector(&m_sa_sample);
+    m_alphabet.load_mapped(addr);
 }
 
 template <class t_enc_vec,

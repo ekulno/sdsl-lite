@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -119,6 +120,14 @@ template <typename T>
 void read_member(T & t, std::istream & in)
 {
     in.read((char *)&t, sizeof(t));
+}
+
+// Read primitive-typed variable t from a memory-mapped address, advancing the pointer.
+template <typename T>
+void read_member(T & t, char const *& addr)
+{
+    std::memcpy(&t, addr, sizeof(t));
+    addr += sizeof(t);
 }
 
 // Specialization for std::string
