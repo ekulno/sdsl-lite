@@ -920,15 +920,17 @@ public:
     static void clear(t_vec & v)
     {
         int64_t size_in_bytes = ((v.m_size + 63) >> 6) << 3;
-        // remove mem
-        memory_manager::free_mem(v.m_data);
+        // remove mem (skip if data is memory-mapped, indicated by m_capacity == 0)
+        if (v.m_capacity > 0)
+            memory_manager::free_mem(v.m_data);
         v.m_data = nullptr;
 
         // update stats
-        if (size_in_bytes)
+        if (size_in_bytes && v.m_capacity > 0)
         {
             memory_monitor::record(size_in_bytes * -1);
         }
+        v.m_capacity = 0;
     }
 
     static int open_file_for_mmap(std::string & filename, std::ios_base::openmode mode)
